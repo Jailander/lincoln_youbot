@@ -10,7 +10,7 @@ class TransformS(object):
     def __init__(self):
         rospy.init_node('stick_transform')
         self.tf = TransformListener()
-
+        print "Starting tranformer"
         rospy.Subscriber("/whycon/poses",geometry_msgs.msg.PoseArray, self.handle_whycon)
         self.stick_pose_pub = rospy.Publisher("/stick_pose", geometry_msgs.msg.PoseStamped, queue_size=1)
     
