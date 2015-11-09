@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<launch>
+  <node name="static_transform_publisher" pkg="tf" type="static_transform_publisher" args="-0.077 0.0 0.03 1.5707 1.5707 1.5707 arm_link_5 camera_frame 100"/>
+  <node pkg="usb_cam" type="usb_cam_node" name="usb_cam_node" respawn="true" output="screen">
+	<param name="framerate" value="5" type="int"/>
+  </node>
+
+  <node pkg="whycon" type="whycon" name="whycon" respawn="true" output="screen">
+	<param name="targets" value="1" type="int"/>
+	<param name="outer_diameter" value="0.05" type="double"/>
+	<param name="inner_diameter" value="0.02" type="double"/>
+	<param name="target_frame" value="camera_frame"/>
+	<remap from="/camera/image_rect_color" to="/usb_cam/image_raw"/>
+  </node>
+
+</launch>
