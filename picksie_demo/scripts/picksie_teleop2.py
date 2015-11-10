@@ -19,13 +19,13 @@ class Teleop(object):
     def __init__(self, linearAxisIndex = 1, angularAxisIndex = 0):
         rospy.init_node('picksie_teleop')
         self.init_moveit()
-        
+        rospy.on_shutdown(self._on_node_shutdown)
         
         self._joints=[]
         self.joint_names=['arm_joint_1', 'arm_joint_2', 'arm_joint_3', 'arm_joint_4', 'arm_joint_5']#, 'gripper_finger_joint_l', 'gripper_finger_joint_r']
         
-        self.def_pos=[3.0, 2.61, -0.91, 0.25, 0.12]#2.88]
-        self.drop_pos= [3.0, 0.011, -2.25, 0.25, 0.111]#, 0.0]
+        self.def_pos=[3.0, 2.61, -0.91, 0.25, 0.111]#2.88]
+        self.drop_pos= [3.0, 0.03, -2.25, 0.25, 2.88]#, 0.0]
 
 
         self._xymode=False
@@ -112,9 +112,17 @@ class Teleop(object):
         wpose.orientation.w = 1.0
         wpose.position.x = waypoints[0].position.x# + 0.1
         wpose.position.y = waypoints[0].position.y
-        wpose.position.z = waypoints[0].position.z -0.03
+        wpose.position.z = waypoints[0].position.z -0.05
+        waypoints.append(copy.deepcopy(wpose))
+
+        # second move down
+        wpose.position.x += 0.08
         waypoints.append(copy.deepcopy(wpose))
         
+        # second move down
+        wpose.position.z += 0.03
+        waypoints.append(copy.deepcopy(wpose))
+
         (plan3, fraction) = self.group.compute_cartesian_path(
                              waypoints,   # waypoints to follow
                              0.01,        # eef_step
@@ -331,7 +339,10 @@ class Teleop(object):
             if len(arm_cmd.positions) >0:
                 self._BricsCmdPublisher.publish(arm_cmd)            
                             
-            
+    def _on_node_shutdown(self):
+        print "bye"
+        moveit_commander.roscpp_shutdown()
+
 
 if __name__ == '__main__':
     teleop = Teleop()
