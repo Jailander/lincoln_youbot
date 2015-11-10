@@ -22,8 +22,8 @@ class Teleop(object):
         self._joints=[]
         self.joint_names=['arm_joint_1', 'arm_joint_2', 'arm_joint_3', 'arm_joint_4', 'arm_joint_5']#, 'gripper_finger_joint_l', 'gripper_finger_joint_r']
         
-        self.def_pos=[3.0, 2.61, -0.91, 0.25, 2.88]#, 0.0115, 0.0]
-        self.drop_pos= [3.0, 0.011, -2.25, 0.25, 0.111, 0.0]
+        self.def_pos=[3.0, 2.61, -0.91, 0.25, 0.12]#2.88]
+        self.drop_pos= [3.0, 0.011, -2.25, 0.25, 0.111]#, 0.0]
 
 
         self._xymode=False
@@ -76,14 +76,15 @@ class Teleop(object):
 
 
     def go_to_search_pos(self):
+        print "going to search pos"
         self.group.clear_pose_targets()
         group_variable_values = self.def_pos
         self.group.set_joint_value_target(group_variable_values)
         
         self.plan2 = self.group.plan()
         self.group.go(wait=True)
+        self.toggle_gripper(state=1)
 
-#        print "going to search pos"
 #        for i in range(0,len(self.joint_names)):
 #            arm_cmd = brics_actuator.msg.JointPositions()
 #            j_cmd= brics_actuator.msg.JointValue()
@@ -95,34 +96,48 @@ class Teleop(object):
 #            self._BricsCmdPublisher.publish(arm_cmd)
 #            rospy.sleep(1)
 #        self.arm_disabled=False
-#        print "Done"
+        print "Done"
 
     def go_to_drop_pos(self):
         print "going to drop pos"
-        for i in range(0,len(self.joint_names)):
-            arm_cmd = brics_actuator.msg.JointPositions()
-            j_cmd= brics_actuator.msg.JointValue()
-            j_cmd.joint_uri = self.joint_names[i]
-            j_cmd.unit = 'rad'
-            j_cmd.value = self.drop_pos[i]
-            arm_cmd.positions.append(j_cmd)
-            #print arm_cmd
-            self._BricsCmdPublisher.publish(arm_cmd)
-            rospy.sleep(1)
-        self.arm_disabled=False
+        self.group.clear_pose_targets()
+        group_variable_values = self.drop_pos
+        self.group.set_joint_value_target(group_variable_values)
+        
+        self.plan2 = self.group.plan()
+        self.group.go(wait=True)
+        self.toggle_gripper(state=1)
+#        for i in range(0,len(self.joint_names)):
+#            arm_cmd = brics_actuator.msg.JointPositions()
+#            j_cmd= brics_actuator.msg.JointValue()
+#            j_cmd.joint_uri = self.joint_names[i]
+#            j_cmd.unit = 'rad'
+#            j_cmd.value = self.drop_pos[i]
+#            arm_cmd.positions.append(j_cmd)
+#            #print arm_cmd
+#            self._BricsCmdPublisher.publish(arm_cmd)
+#            rospy.sleep(1)
+#        self.arm_disabled=False
+        print "Done"
 
-
-    def toggle_gripper(self):
+    def toggle_gripper(self, state=0):
         print self._joints[5]
         grp_cmd = brics_actuator.msg.JointPositions()
         j_cmd= brics_actuator.msg.JointValue()
         j_cmd.joint_uri = self._joints[5]['name']
         j_cmd.unit = 'm'
-        if self._joints[5]['pos'] < 0.005:
-            j_cmd.value = 0.0115
+        if state == 0:
+            if self._joints[5]['pos'] < 0.005:
+                j_cmd.value = 0.0115
+            else:
+                j_cmd.value = 0.0
         else:
-            j_cmd.value = 0.0
-        grp_cmd.positions.append(j_cmd)        
+            if state == 1:
+                j_cmd.value = 0.0115
+            else:
+                j_cmd.value = 0.0
+                
+        grp_cmd.positions.append(j_cmd)
         self._GripperCmdPublisher.publish(grp_cmd)
 
 
