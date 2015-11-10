@@ -140,6 +140,36 @@ class Teleop(object):
 #        wpose.position.y += 0.05
 #        waypoints.append(copy.deepcopy(wpose))
 
+    def navigate_to_target(self):
+        client = actionlib.SimpleActionClient('move_base', MoveBaseAction)
+        client.wait_for_server()
+
+        pose=rospy.wait_for_message("/stick_pose", geometry_msgs.msg.PoseStamped, timeout=90)    
+        print "Requesting Navigation to "
+        print pose
+
+        movegoal = MoveBaseGoal()
+        movegoal.target_pose.header.frame_id = "map"
+        movegoal.target_pose.header.stamp = rospy.get_rostime()
+        movegoal.target_pose.pose = pose.pose
+        movegoal.target_pose.pose.position.x = movegoal.target_pose.pose.position.x - 0.5
+
+        client.cancel_all_goals()
+        rospy.sleep(rospy.Duration.from_sec(1))
+        #print movegoal
+        client.send_goal(movegoal)
+        client.wait_for_result()
+
+        velocityCommand = Twist()
+        velocityCommand.linear.x = 0.0
+        velocityCommand.linear.y = 0.0
+        velocityCommand.angular.z = 0.0
+        self._VelocityCommandPublisher.publish(velocityCommand)
+
+        ps = client.get_result()  # A FibonacciResult
+        self.arm_disabled=False
+        print ps
+
 
     def go_to_drop_pos(self):
         print "going to drop pos"
@@ -229,6 +259,10 @@ class Teleop(object):
             
         if joyMessage.buttons[0]:
             self.go_to_drop_pos()
+            self.arm_disabled=True
+
+        if joyMessage.buttons[1]:
+            self.navigate_to_target()
             self.arm_disabled=True
 
         if joyMessage.buttons[2]:

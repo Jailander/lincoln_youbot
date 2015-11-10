@@ -4,7 +4,8 @@ import rospy
 from geometry_msgs.msg import Twist
 from sensor_msgs.msg import Joy
 from sensor_msgs.msg import JointState
-
+import actionlib
+from move_base_msgs.msg import *
 import brics_actuator.msg
 
 #/JointPositions
@@ -13,6 +14,7 @@ class Teleop(object):
     
     def __init__(self, linearAxisIndex = 1, angularAxisIndex = 0):
         rospy.init_node('picksie_teleop')
+
         self._joints=[]
         self.joint_names=['arm_joint_1', 'arm_joint_2', 'arm_joint_3', 'arm_joint_4', 'arm_joint_5']#, 'gripper_finger_joint_l', 'gripper_finger_joint_r']
         #self.def_pos=[3.14,0.058,-0.4834,2.4,2.88, 0.5, 0.5]
@@ -58,6 +60,37 @@ class Teleop(object):
         self.go_to_search_pos()
 
 
+    def navigate_to_target(self):
+        client = actionlib.SimpleActionClient('move_base', MoveBaseAction)
+        client.wait_for_server()
+
+        pose=rospy.wait_for_message("/stick_pose", geometry_msgs.msg.PoseStamped, timeout=90)    
+        print "Requesting Navigation to "
+        print pose
+
+        movegoal = MoveBaseGoal()
+        movegoal.target_pose.header.frame_id = "map"
+        movegoal.target_pose.header.stamp = rospy.get_rostime()
+        movegoal.target_pose.pose = pose.pose
+        movegoal.target_pose.pose.position.x = movegoal.target_pose.pose.position.x - 0.5
+
+        client.cancel_all_goals()
+        rospy.sleep(rospy.Duration.from_sec(1))
+        #print movegoal
+        client.send_goal(movegoal)
+        client.wait_for_result()
+
+        velocityCommand = Twist()
+        velocityCommand.linear.x = 0.0
+        velocityCommand.linear.y = 0.0
+        velocityCommand.angular.z = 0.0
+        self._VelocityCommandPublisher.publish(velocityCommand)
+
+        ps = client.get_result()  # A FibonacciResult
+        self.arm_disabled=False
+        print ps
+
+
     def go_to_search_pos(self):
         print "going to search pos"
         for i in range(0,len(self.joint_names)):
@@ -70,6 +103,7 @@ class Teleop(object):
             print arm_cmd
             self._BricsCmdPublisher.publish(arm_cmd)
             rospy.sleep(1)
+            self.toggle_gripper(state=1)
         self.arm_disabled=False
         print "Done"
 
@@ -85,20 +119,29 @@ class Teleop(object):
             #print arm_cmd
             self._BricsCmdPublisher.publish(arm_cmd)
             rospy.sleep(1)
+            self.toggle_gripper(state=1)
         self.arm_disabled=False
 
 
-    def toggle_gripper(self):
+    def toggle_gripper(self, state=0):
         print self._joints[5]
         grp_cmd = brics_actuator.msg.JointPositions()
         j_cmd= brics_actuator.msg.JointValue()
         j_cmd.joint_uri = self._joints[5]['name']
         j_cmd.unit = 'm'
-        if self._joints[5]['pos'] < 0.005:
-            j_cmd.value = 0.0115
+        if state == 0:
+            if self._joints[5]['pos'] < 0.005:
+                j_cmd.value = 0.0115
+            else:
+                j_cmd.value = 0.0
         else:
-            j_cmd.value = 0.0
-        grp_cmd.positions.append(j_cmd)        
+            if state == 1:
+                j_cmd.value = 0.0115
+            else:
+                j_cmd.value = 0.0
+                
+        grp_cmd.positions.append(j_cmd)
+        print "sending Gripper command %f" %j_cmd.value
         self._GripperCmdPublisher.publish(grp_cmd)
 
 
@@ -147,6 +190,9 @@ class Teleop(object):
             self.go_to_drop_pos()
             self.arm_disabled=True
 
+        if joyMessage.buttons[1]:
+            self.navigate_to_target()
+            self.arm_disabled=True
 
         if joyMessage.buttons[5]:
             print self._joints
