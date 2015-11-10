@@ -20,8 +20,12 @@ class TransformS(object):
             stick_pose_or.header=msg.header
             stick_pose_or.pose=i
 
-            self.tf.waitForTransform(stick_pose_or.header.frame_id, "/base_link",stick_pose_or.header.stamp, rospy.Duration(1.0))
-            stick_pose_d= self.tf.transformPose('/base_link', stick_pose_or)
+            #self.tf.waitForTransform(stick_pose_or.header.frame_id, "/base_link",stick_pose_or.header.stamp, rospy.Duration(4.0))
+            stick_pose_d= self.tf.transformPose('/base_footprint', stick_pose_or)
+            stick_pose_d.pose.orientation.x= 1.0
+            stick_pose_d.pose.orientation.y= 0.0
+            stick_pose_d.pose.orientation.z= 0.0
+            stick_pose_d.pose.orientation.w= 0.0
             self.stick_pose_pub.publish(stick_pose_d)
 
 
