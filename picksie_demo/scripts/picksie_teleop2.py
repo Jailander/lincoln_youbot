@@ -2,11 +2,13 @@
 
 import sys
 import rospy
+import copy
 from geometry_msgs.msg import Twist
 from sensor_msgs.msg import Joy
 from sensor_msgs.msg import JointState
 import moveit_commander
 import moveit_msgs.msg
+import geometry_msgs.msg
 
 import brics_actuator.msg
 
@@ -81,8 +83,9 @@ class Teleop(object):
         group_variable_values = self.def_pos
         self.group.set_joint_value_target(group_variable_values)
         
-        self.plan2 = self.group.plan()
+        plan2 = self.group.plan()
         self.group.go(wait=True)
+        rospy.sleep(0.5)
         self.toggle_gripper(state=1)
 
 #        for i in range(0,len(self.joint_names)):
@@ -98,6 +101,38 @@ class Teleop(object):
 #        self.arm_disabled=False
         print "Done"
 
+    def harvest(self):
+        print "picking"
+        waypoints = []
+        # start with the current pose
+        waypoints.append(self.group.get_current_pose().pose)
+        
+        # first orient gripper and move forward (+x)
+        wpose = geometry_msgs.msg.Pose()
+        wpose.orientation.w = 1.0
+        wpose.position.x = waypoints[0].position.x# + 0.1
+        wpose.position.y = waypoints[0].position.y
+        wpose.position.z = waypoints[0].position.z -0.03
+        waypoints.append(copy.deepcopy(wpose))
+        
+        (plan3, fraction) = self.group.compute_cartesian_path(
+                             waypoints,   # waypoints to follow
+                             0.01,        # eef_step
+                             0.0)         # jump_threshold
+        self.group.go(wait=True)
+        rospy.sleep(0.5)
+        self.toggle_gripper(state=-1)
+        print "done"
+        
+#        # second move down
+#        wpose.position.x += 0.05
+#        waypoints.append(copy.deepcopy(wpose))
+#        
+#        # third move to the side
+#        wpose.position.y += 0.05
+#        waypoints.append(copy.deepcopy(wpose))
+
+
     def go_to_drop_pos(self):
         print "going to drop pos"
         self.group.clear_pose_targets()
@@ -106,6 +141,7 @@ class Teleop(object):
         
         self.plan2 = self.group.plan()
         self.group.go(wait=True)
+        rospy.sleep(0.5)
         self.toggle_gripper(state=1)
 #        for i in range(0,len(self.joint_names)):
 #            arm_cmd = brics_actuator.msg.JointPositions()
@@ -138,6 +174,7 @@ class Teleop(object):
                 j_cmd.value = 0.0
                 
         grp_cmd.positions.append(j_cmd)
+        print "sending Gripper command %f" %j_cmd.value
         self._GripperCmdPublisher.publish(grp_cmd)
 
 
@@ -186,6 +223,9 @@ class Teleop(object):
             self.go_to_drop_pos()
             self.arm_disabled=True
 
+        if joyMessage.buttons[2]:
+            self.harvest()
+            self.arm_disabled=True
 
         if joyMessage.buttons[5]:
             print self._joints
