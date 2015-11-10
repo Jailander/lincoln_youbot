@@ -13,4 +13,6 @@
 	<remap from="/camera/image_rect_color" to="/usb_cam/image_raw"/>
   </node>
 
+   <node pkg="picksie_demo" type="stick_transformer.py" name="stick_transformer" respawn="true" output="screen"/>
+  
 </launch>

@@ -16,7 +16,7 @@ tmux select-window -t $SESSION:1
 tmux send-keys "roslaunch picksie_demo teleop.launch"
 
 tmux select-window -t $SESSION:2
-tmux send-keys "rosrun usb_cam usb_cam_node _framerate:=5"
+tmux send-keys "roslaunch picksie_demo whycon.launch"
 
 # Set default window
 tmux select-window -t $SESSION:0
