@@ -7,6 +7,7 @@ tmux -2 new-session -d -s $SESSION
 tmux new-window -t $SESSION:0 -n 'robot'
 tmux new-window -t $SESSION:1 -n 'teleop'
 tmux new-window -t $SESSION:2 -n 'whycon'
+tmux new-window -t $SESSION:3 -n 'kinnect'
 
 
 tmux select-window -t $SESSION:0
@@ -17,6 +18,9 @@ tmux send-keys "roslaunch picksie_demo teleop.launch"
 
 tmux select-window -t $SESSION:2
 tmux send-keys "roslaunch picksie_demo whycon.launch"
+
+tmux select-window -t $SESSION:3
+tmux send-keys "roslaunch openni2_launch openni2.launch"
 
 # Set default window
 tmux select-window -t $SESSION:0

@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <launch>
-  <node name="static_transform_publisher" pkg="tf" type="static_transform_publisher" args="0.077 0.0 0.03 1.57 0.0 0.0 arm_link_5 camera_frame 100"/>
+  <node name="static_transform_publisher" pkg="tf" type="static_transform_publisher" args="-0.077 0.0 0.03 -1.57 0.0 0.0 arm_link_5 camera_frame 100"/>
   <node pkg="usb_cam" type="usb_cam_node" name="usb_cam" respawn="true" output="screen">
 	<param name="framerate" value="5" type="int"/>
   </node>

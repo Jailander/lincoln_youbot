@@ -25,16 +25,16 @@ class nav_client(object):
         print pose
 
         movegoal = MoveBaseGoal()
-        movegoal.target_pose.header.frame_id = "map"
+        movegoal.target_pose.header.frame_id = pose.header.frame_id
         movegoal.target_pose.header.stamp = rospy.get_rostime()
         movegoal.target_pose.pose = pose.pose
         movegoal.target_pose.pose.position.x = movegoal.target_pose.pose.position.x - 0.5
 #        .position.x = float(inf[0])
 #        movegoal.target_pose.pose.position.y = float(inf[1])
-#        movegoal.target_pose.pose.orientation.x = 0
-#        movegoal.target_pose.pose.orientation.y = 0
-#        movegoal.target_pose.pose.orientation.z = float(inf[5])
-#        movegoal.target_pose.pose.orientation.w = float(inf[6])
+        movegoal.target_pose.pose.orientation.x = 0
+        movegoal.target_pose.pose.orientation.y = 0
+        movegoal.target_pose.pose.orientation.z = 0.0#float(inf[5])
+        movegoal.target_pose.pose.orientation.w = 1.0#float(inf[6])
         self.client.cancel_all_goals()
         rospy.sleep(rospy.Duration.from_sec(1))
         #print movegoal

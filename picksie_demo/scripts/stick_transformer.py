@@ -22,10 +22,11 @@ class TransformS(object):
 
             #self.tf.waitForTransform(stick_pose_or.header.frame_id, "/base_link",stick_pose_or.header.stamp, rospy.Duration(4.0))
             stick_pose_d= self.tf.transformPose('/base_footprint', stick_pose_or)
-            stick_pose_d.pose.orientation.x= 1.0
-            stick_pose_d.pose.orientation.y= 0.0
-            stick_pose_d.pose.orientation.z= 0.0
-            stick_pose_d.pose.orientation.w= 0.0
+            #stick_pose_d.pose.position.x= stick_pose_d.pose.position.x-0.12
+            stick_pose_d.pose.orientation.x= 0.5
+            stick_pose_d.pose.orientation.y= 0.5
+            stick_pose_d.pose.orientation.z= 0.5
+            stick_pose_d.pose.orientation.w= -0.5
             self.stick_pose_pub.publish(stick_pose_d)
 
 

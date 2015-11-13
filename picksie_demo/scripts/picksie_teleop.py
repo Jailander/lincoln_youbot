@@ -85,8 +85,9 @@ class Teleop(object):
             #print arm_cmd
             self._BricsCmdPublisher.publish(arm_cmd)
             rospy.sleep(1)
-        self.arm_disabled=False
 
+        self.arm_disabled=False
+        print "done"
 
     def toggle_gripper(self):
         print self._joints[5]
@@ -100,7 +101,7 @@ class Teleop(object):
             j_cmd.value = 0.0
         grp_cmd.positions.append(j_cmd)        
         self._GripperCmdPublisher.publish(grp_cmd)
-
+        self.arm_disabled=False
 
     def _HandleJointStateMessage(self, jointMessage):
         for i in self._joints:
